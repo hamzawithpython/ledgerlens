@@ -33,6 +33,8 @@ class ExtractedInvoice(BaseModel):
     line_items: list[LineItem] = Field(default_factory=list)
     subtotal: FieldConfidence
     tax: FieldConfidence | None = None
+    other_charges: FieldConfidence | None = None
+    other_charges_note: FieldConfidence | None = None  # what the other charges represent, e.g. "shipping + handling"
     total: FieldConfidence
     currency: FieldConfidence
 

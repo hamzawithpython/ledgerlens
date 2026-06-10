@@ -24,6 +24,7 @@ def _good_invoice() -> ExtractedInvoice:
         line_items=[_line("Widget", 2, 10.0, 20.0), _line("Gadget", 1, 30.0, 30.0)],
         subtotal=_fc(50.0),
         tax=_fc(5.0),
+        other_charges=_fc(0.0),
         total=_fc(55.0),
         currency=_fc("USD"),
     )
@@ -44,7 +45,7 @@ def test_bad_total_flagged():
     inv = _good_invoice()
     inv.total = _fc(999.0)
     issues = check_math(inv)
-    assert any(i.rule == "math_check" for i in issues)
+    assert any(i.rule == "reconciliation" for i in issues)
 
 
 def test_missing_vendor_flagged():
@@ -69,3 +70,20 @@ def test_math_error_routes_to_review():
     inv.total = _fc(999.0)
     result = validate(inv, db)
     assert result.status.value == "needs_review"
+
+def test_reconciles_with_other_charges():
+    """subtotal 50 + tax 5 + shipping 10 = total 65 should pass."""
+    inv = _good_invoice()
+    inv.other_charges = _fc(10.0)
+    inv.total = _fc(65.0)
+    issues = check_math(inv)
+    assert not any(i.rule == "reconciliation" for i in issues)
+
+
+def test_unaccounted_gap_flagged():
+    """If total exceeds subtotal+tax+other, an unextracted charge is flagged."""
+    inv = _good_invoice()
+    inv.other_charges = _fc(0.0)
+    inv.total = _fc(75.0)   # 50 + 5 + 0 = 55, but total says 75 -> 20 unaccounted
+    issues = check_math(inv)
+    assert any(i.rule == "reconciliation" for i in issues)
