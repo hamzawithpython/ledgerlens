@@ -1,12 +1,9 @@
 venv/
 __pycache__/
 *.pyc
+.git/
 .env
-*.sqlite3
-*.db
-.DS_Store
-evals/samples/*.pdf
-chroma_db/
-.pytest_cache/
 evals/cache/
-env.yaml
+evals/samples/*.pdf
+.pytest_cache/
+*.md
