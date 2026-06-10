@@ -97,6 +97,25 @@ def check_math(inv: ExtractedInvoice) -> list[ValidationIssue]:
             ))
     return issues
 
+def check_charge_sanity(inv: ExtractedInvoice) -> list[ValidationIssue]:
+    """Flag implausible other_charges (e.g. a misread shipping value).
+
+    Vision models can misread a line value and then self-reconcile the total to
+    their own wrong figure, slipping past the arithmetic check. A charge that
+    exceeds the subtotal is rare on a real invoice, so we surface it for a human
+    to confirm rather than auto-approving a possibly-misread number.
+    """
+    issues = []
+    subtotal = _to_decimal(inv.subtotal.value)
+    other = _to_decimal(inv.other_charges.value) if inv.other_charges else None
+    if subtotal is not None and other is not None and other > subtotal:
+        issues.append(ValidationIssue(
+            rule="charge_sanity", severity="warning",
+            message=f"Other charges ({other}) exceed the subtotal ({subtotal}) — "
+                    f"possible misread value; please verify.",
+        ))
+    return issues
+
 
 def check_duplicate(inv: ExtractedInvoice, db: Session) -> list[ValidationIssue]:
     """Flag if an invoice with the same number + vendor already exists."""
@@ -121,14 +140,16 @@ def validate(inv: ExtractedInvoice, db: Session) -> ProcessedInvoice:
     issues: list[ValidationIssue] = []
     issues += check_missing_fields(inv)
     issues += check_math(inv)
+    issues += check_charge_sanity(inv)
     issues += check_duplicate(inv, db)
 
     conf = overall_confidence(inv)
     has_errors = any(i.severity == "error" for i in issues)
+    has_warnings = any(i.severity == "warning" for i in issues)
     below_threshold = conf < settings.confidence_threshold
 
-    # Routing: approve only if NO errors AND confidence clears the bar.
-    if has_errors or below_threshold:
+    # Errors, warnings, or low confidence all route to human review.
+    if has_errors or has_warnings or below_threshold:
         status = InvoiceStatus.needs_review
     else:
         status = InvoiceStatus.approved
