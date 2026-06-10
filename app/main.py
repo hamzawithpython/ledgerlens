@@ -8,13 +8,12 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
-from app.db import Base, engine, get_db
+from app.db import get_db
 from app.schemas import InvoiceDetail, InvoiceStatus, InvoiceSummary
 from app.pipeline import process_pdf
 from app.store import get_invoice, list_invoices, resolve_review
 
-# Create tables on startup if they don't exist (idempotent).
-Base.metadata.create_all(engine)
+
 
 app = FastAPI(title="LedgerLens", description="Agentic invoice processing with confidence-gated human review.")
 

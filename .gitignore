@@ -9,3 +9,4 @@ evals/samples/*.pdf
 chroma_db/
 .pytest_cache/
 evals/cache/
+env.yaml
