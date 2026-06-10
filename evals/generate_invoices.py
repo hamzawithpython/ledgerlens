@@ -34,7 +34,7 @@ def money(d: Decimal) -> Decimal:
     return d.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
-def make_invoice(idx: int, seed: int) -> dict:
+def make_invoice(idx: int, seed: int, corrupt: str | None = None) -> dict:
     random.seed(seed)
     vendor = VENDORS[idx % len(VENDORS)]
     inv_no = f"INV-2026-{1000 + idx}"
@@ -55,7 +55,7 @@ def make_invoice(idx: int, seed: int) -> dict:
     tax = money(subtotal * TAX_RATE)
     total = money(subtotal + tax)
 
-    return {
+    inv = {
         "file": f"invoice_{idx:02d}.pdf",
         "vendor_name": vendor,
         "invoice_number": inv_no,
@@ -65,7 +65,22 @@ def make_invoice(idx: int, seed: int) -> dict:
         "subtotal": float(subtotal),
         "tax": float(tax),
         "total": float(total),
+        "expect_status": "approved",   # eval ground truth for routing
     }
+
+    # Inject deliberate errors that a vision model CANNOT silently "fix".
+    # Numeric corruptions (bad totals/amounts) don't work: Llama 4 Scout
+    # normalizes them back to internal consistency on extraction. Missing or
+    # malformed fields, however, are faithfully reported as absent — so we use
+    # those to exercise the review-routing pipeline end-to-end.
+    if corrupt == "missing_invoice_number":
+        inv["invoice_number"] = ""              # blank on the page -> missing_field
+        inv["expect_status"] = "needs_review"
+    elif corrupt == "missing_vendor":
+        inv["vendor_name"] = ""                 # blank vendor -> missing_field
+        inv["expect_status"] = "needs_review"
+
+    return inv
 
 
 def render_pdf(inv: dict, path: Path) -> None:
@@ -116,15 +131,17 @@ def render_pdf(inv: dict, path: Path) -> None:
 
 def main() -> None:
     SAMPLES_DIR.mkdir(parents=True, exist_ok=True)
+    # Two of the eight are deliberately broken to exercise review routing.
+    corrupt_map = {6: "missing_invoice_number", 7: "missing_vendor"}
     truth = []
     for idx in range(8):
-        inv = make_invoice(idx, seed=42 + idx)
+        inv = make_invoice(idx, seed=42 + idx, corrupt=corrupt_map.get(idx))
         render_pdf(inv, SAMPLES_DIR / inv["file"])
         truth.append(inv)
     GROUND_TRUTH.write_text(json.dumps(truth, indent=2), encoding="utf-8")
-    print(f"Generated {len(truth)} invoices in {SAMPLES_DIR}")
+    n_bad = sum(1 for t in truth if t["expect_status"] != "approved")
+    print(f"Generated {len(truth)} invoices ({n_bad} deliberately broken) in {SAMPLES_DIR}")
     print(f"Ground truth written to {GROUND_TRUTH}")
-
 
 if __name__ == "__main__":
     main()

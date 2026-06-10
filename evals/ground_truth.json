@@ -21,7 +21,8 @@
     ],
     "subtotal": 186.0,
     "tax": 18.6,
-    "total": 204.6
+    "total": 204.6,
+    "expect_status": "approved"
   },
   {
     "file": "invoice_01.pdf",
@@ -57,7 +58,8 @@
     ],
     "subtotal": 306.46,
     "tax": 30.65,
-    "total": 337.11
+    "total": 337.11,
+    "expect_status": "approved"
   },
   {
     "file": "invoice_02.pdf",
@@ -93,7 +95,8 @@
     ],
     "subtotal": 331.75,
     "tax": 33.18,
-    "total": 364.93
+    "total": 364.93,
+    "expect_status": "approved"
   },
   {
     "file": "invoice_03.pdf",
@@ -123,7 +126,8 @@
     ],
     "subtotal": 59.49,
     "tax": 5.95,
-    "total": 65.44
+    "total": 65.44,
+    "expect_status": "approved"
   },
   {
     "file": "invoice_04.pdf",
@@ -147,7 +151,8 @@
     ],
     "subtotal": 211.0,
     "tax": 21.1,
-    "total": 232.1
+    "total": 232.1,
+    "expect_status": "approved"
   },
   {
     "file": "invoice_05.pdf",
@@ -177,12 +182,13 @@
     ],
     "subtotal": 177.96,
     "tax": 17.8,
-    "total": 195.76
+    "total": 195.76,
+    "expect_status": "approved"
   },
   {
     "file": "invoice_06.pdf",
     "vendor_name": "Summit Catering Group",
-    "invoice_number": "INV-2026-1006",
+    "invoice_number": "",
     "invoice_date": "2026-05-20",
     "currency": "USD",
     "line_items": [
@@ -201,11 +207,12 @@
     ],
     "subtotal": 100.5,
     "tax": 10.05,
-    "total": 110.55
+    "total": 110.55,
+    "expect_status": "needs_review"
   },
   {
     "file": "invoice_07.pdf",
-    "vendor_name": "Vertex Stationery",
+    "vendor_name": "",
     "invoice_number": "INV-2026-1007",
     "invoice_date": "2026-01-21",
     "currency": "USD",
@@ -231,6 +238,7 @@
     ],
     "subtotal": 414.99,
     "tax": 41.5,
-    "total": 456.49
+    "total": 456.49,
+    "expect_status": "needs_review"
   }
 ]
