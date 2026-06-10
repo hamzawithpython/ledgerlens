@@ -30,3 +30,4 @@ _(Cloud Run link added at deploy)_
 
 ## What Didn'\''t Work / Lessons
 - LLM self-reported confidence is poorly calibrated (Llama 4 Scout returns ~1.0 on nearly everything). Rule-based validation (math/duplicate/missing-field checks) is therefore the primary routing gate; model confidence is a secondary signal, with missing fields forced to 0.
+- PowerShell here-strings are fragile for config files: a malformed @'...'@ wrote the literal @' markers into pyproject.toml, breaking TOML parsing. Switched to creating config/text files in the editor (UTF-8 no BOM) rather than shell heredocs.
