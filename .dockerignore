@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.git/
+.env
+evals/cache/
+evals/samples/*.pdf
+.pytest_cache/
+*.md
