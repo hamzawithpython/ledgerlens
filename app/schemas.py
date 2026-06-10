@@ -18,11 +18,10 @@ class FieldConfidence(BaseModel):
 
 
 class LineItem(BaseModel):
-    description: str
-    quantity: Decimal
-    unit_price: Decimal
-    amount: Decimal
-    confidence: float = Field(ge=0.0, le=1.0)
+    description: FieldConfidence
+    quantity: FieldConfidence
+    unit_price: FieldConfidence
+    amount: FieldConfidence
 
 
 class ExtractedInvoice(BaseModel):

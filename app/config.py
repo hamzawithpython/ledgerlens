@@ -5,10 +5,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    openai_api_key: str
+    extraction_provider: str = "groq"        # groq | openai | gemini
+    extraction_model: str = "meta-llama/llama-4-scout-17b-16e-instruct"
+    groq_api_key: str = ""
+    openai_api_key: str = ""
+    gemini_api_key: str = ""
     database_url: str
     confidence_threshold: float = 0.85
-    extraction_model: str = "gpt-4o-mini"
 
     model_config = SettingsConfigDict(
         env_file=".env",
