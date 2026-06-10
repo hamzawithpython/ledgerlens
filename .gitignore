@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+.env
+*.sqlite3
+*.db
+.DS_Store
+evals/samples/*.pdf
+chroma_db/
+.pytest_cache/
