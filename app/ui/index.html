@@ -4,57 +4,438 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LedgerLens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
+    :root {
+      --bg-0: #0b1020;
+      --bg-1: #0f152b;
+      --ink: #0f172a;
+      --ink-soft: #475569;
+      --ink-mute: #94a3b8;
+      --line: rgba(148, 163, 184, 0.18);
+      --line-strong: rgba(99, 102, 241, 0.45);
+      --surface: rgba(255, 255, 255, 0.78);
+      --surface-solid: #ffffff;
+      --accent: #6366f1;
+      --accent-2: #8b5cf6;
+      --accent-glow: rgba(99, 102, 241, 0.35);
+      --pos: #16a34a;
+      --pos-bg: #dcfce7;
+      --pos-ink: #166534;
+      --warn: #d97706;
+      --warn-bg: #fef3c7;
+      --warn-ink: #92400e;
+      --neg: #dc2626;
+      --neg-bg: #fee2e2;
+      --neg-ink: #991b1b;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.08);
+      --shadow-md: 0 10px 30px -12px rgba(15, 23, 42, 0.25), 0 4px 12px -6px rgba(15, 23, 42, 0.12);
+      --shadow-lg: 0 24px 60px -20px rgba(30, 27, 75, 0.45), 0 8px 24px -10px rgba(15, 23, 42, 0.18);
+      --radius: 18px;
+      --radius-sm: 12px;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      --page-bg:
+        radial-gradient(1200px 600px at 12% -8%, rgba(99, 102, 241, 0.18), transparent 55%),
+        radial-gradient(900px 500px at 105% 0%, rgba(139, 92, 246, 0.14), transparent 50%),
+        linear-gradient(180deg, #f7f8fc 0%, #eef1f8 100%);
+    }
+
+    html[data-theme="dark"] {
+      --ink: #e6eaf5;
+      --ink-soft: #a3aec9;
+      --ink-mute: #6b7596;
+      --line: rgba(148, 163, 184, 0.16);
+      --line-strong: rgba(129, 140, 248, 0.5);
+      --surface: rgba(23, 29, 51, 0.72);
+      --surface-solid: #161b30;
+      --accent: #818cf8;
+      --accent-2: #a78bfa;
+      --accent-glow: rgba(129, 140, 248, 0.4);
+      --pos: #22c55e;
+      --pos-bg: rgba(34, 197, 94, 0.16);
+      --pos-ink: #86efac;
+      --warn: #f59e0b;
+      --warn-bg: rgba(245, 158, 11, 0.16);
+      --warn-ink: #fcd34d;
+      --neg: #f87171;
+      --neg-bg: rgba(248, 113, 113, 0.15);
+      --neg-ink: #fca5a5;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);
+      --shadow-md: 0 10px 30px -12px rgba(0, 0, 0, 0.6), 0 4px 12px -6px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 24px 60px -20px rgba(0, 0, 0, 0.7), 0 8px 24px -10px rgba(0, 0, 0, 0.5);
+      --page-bg:
+        radial-gradient(1200px 600px at 12% -8%, rgba(99, 102, 241, 0.22), transparent 55%),
+        radial-gradient(900px 500px at 105% 0%, rgba(139, 92, 246, 0.18), transparent 50%),
+        linear-gradient(180deg, #0a0e1c 0%, #0d1224 100%);
+    }
+
     * { box-sizing: border-box; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
     body {
-      font-family: system-ui, -apple-system, Segoe UI, sans-serif;
-      margin: 0; background: #f5f5f4; color: #1c1c1c; line-height: 1.5;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0;
+      color: var(--ink);
+      line-height: 1.5;
+      min-height: 100vh;
+      background: var(--page-bg);
+      background-attachment: fixed;
+      transition: color 0.3s ease;
     }
-    header { background: #1e293b; color: #fff; padding: 16px 24px; }
-    header h1 { margin: 0; font-size: 20px; }
-    header p { margin: 4px 0 0; font-size: 13px; color: #94a3b8; }
-    .wrap { display: flex; gap: 24px; padding: 24px; flex-wrap: wrap; }
-    .col { flex: 1; min-width: 340px; }
-    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
-    h2 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; margin: 0 0 12px; }
+
+    /* ---------- Header ---------- */
+    header {
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+      padding: 30px 28px 34px;
+      background:
+        radial-gradient(700px 300px at 8% 120%, rgba(139, 92, 246, 0.5), transparent 60%),
+        linear-gradient(120deg, #0b1020 0%, #141a35 45%, #1e1b4b 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    header::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: radial-gradient(700px 240px at 80% 30%, #000, transparent 75%);
+      pointer-events: none;
+    }
+    .brand { display: flex; align-items: center; gap: 14px; position: relative; z-index: 1; }
+    .logo-mark {
+      width: 40px; height: 40px; border-radius: 12px; flex: none;
+      display: grid; place-items: center;
+      background: linear-gradient(140deg, var(--accent), var(--accent-2));
+      box-shadow: 0 8px 24px -6px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+    .logo-mark svg { width: 22px; height: 22px; display: block; }
+    header h1 {
+      margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #fff, #c7d2fe);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    header p { margin: 3px 0 0; font-size: 13px; color: #a5b4d4; letter-spacing: 0.01em; }
+    .header-tools {
+      position: absolute; top: 30px; right: 28px; z-index: 1;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .header-pill {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 12px; font-weight: 600; color: #c7d2fe;
+      padding: 6px 12px; border-radius: 999px;
+      background: rgba(99, 102, 241, 0.16);
+      border: 1px solid rgba(165, 180, 252, 0.28);
+      backdrop-filter: blur(6px);
+    }
+    .theme-toggle {
+      width: 38px; height: 38px; padding: 0; border-radius: 11px;
+      display: grid; place-items: center; color: #c7d2fe;
+      background: rgba(99, 102, 241, 0.16);
+      border: 1px solid rgba(165, 180, 252, 0.28);
+      backdrop-filter: blur(6px);
+      transition: transform 0.18s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .theme-toggle:hover {
+      transform: translateY(-1px); color: #fff;
+      background: rgba(129, 140, 248, 0.3);
+      box-shadow: 0 8px 18px -8px var(--accent-glow);
+    }
+    .theme-toggle:active { transform: translateY(0) scale(0.94); }
+    .theme-toggle:focus-visible { outline: 2px solid #c7d2fe; outline-offset: 2px; }
+    .theme-toggle svg {
+      width: 19px; height: 19px; grid-area: 1 / 1;
+      transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    /* Light mode shows the moon (switch to dark); dark mode shows the sun (switch to light) */
+    .icon-sun { opacity: 0; transform: rotate(-90deg) scale(0.5); }
+    .icon-moon { opacity: 1; transform: rotate(0) scale(1); }
+    html[data-theme="dark"] .icon-sun { opacity: 1; transform: rotate(0) scale(1); }
+    html[data-theme="dark"] .icon-moon { opacity: 0; transform: rotate(90deg) scale(0.5); }
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: #34d399;
+      box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
+      70% { box-shadow: 0 0 0 7px rgba(52, 211, 153, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+    }
+
+    /* ---------- Layout ---------- */
+    .wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 28px;
+      max-width: 1240px;
+      margin: 0 auto;
+      align-items: stretch;
+    }
+    .col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+    /* queue card grows to match the taller column so both bottoms align */
+    .col:last-child .card { flex: 1; }
+    @media (max-width: 860px) {
+      .wrap { grid-template-columns: 1fr; padding: 20px; }
+      .header-pill { display: none; }
+      .header-tools { top: 24px; right: 20px; }
+    }
+
+    /* ---------- Cards ---------- */
+    .card {
+      position: relative;
+      background: var(--surface);
+      backdrop-filter: blur(14px) saturate(140%);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow-md);
+      transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.28s ease, border-color 0.28s ease, background 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--line-strong);
+    }
+
+    h2 {
+      font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;
+      color: var(--ink-soft); margin: 0 0 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    h2::before {
+      content: ""; width: 14px; height: 14px; border-radius: 5px; flex: none;
+      background: linear-gradient(140deg, var(--accent), var(--accent-2));
+      box-shadow: 0 2px 8px -2px var(--accent-glow);
+    }
+
+    /* ---------- Drop zone ---------- */
     .drop {
-      display: block;
-      border: 2px dashed #cbd5e1; border-radius: 8px; padding: 32px; text-align: center;
-      cursor: pointer; transition: background 0.15s, border-color 0.15s;
+      display: block; position: relative; overflow: hidden;
+      border: 2px dashed rgba(99, 102, 241, 0.35);
+      border-radius: var(--radius-sm);
+      padding: 38px 24px; text-align: center; cursor: pointer;
+      background: linear-gradient(180deg, rgba(99, 102, 241, 0.04), rgba(139, 92, 246, 0.03));
+      transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
     }
-    .drop:hover, .drop.over { background: #f1f5f9; border-color: #1e293b; }
+    .drop::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: radial-gradient(220px 120px at 50% 0%, rgba(99, 102, 241, 0.18), transparent 70%);
+      opacity: 0; transition: opacity 0.3s ease;
+    }
+    .drop:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .drop:hover::before { opacity: 1; }
+    .drop.over {
+      border-color: var(--accent);
+      border-style: solid;
+      background: linear-gradient(180deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.08));
+      transform: scale(1.012);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12), var(--shadow-md);
+    }
+    .drop.over::before { opacity: 1; }
     .drop input { display: none; }
-    button {
-      font: inherit; padding: 8px 16px; border-radius: 6px; border: none;
-      cursor: pointer; font-weight: 600;
+    .drop-icon {
+      width: 46px; height: 46px; margin: 0 auto 12px; border-radius: 14px;
+      display: grid; place-items: center; color: #fff; position: relative; z-index: 1;
+      background: linear-gradient(140deg, var(--accent), var(--accent-2));
+      box-shadow: 0 10px 24px -8px var(--accent-glow);
+      transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
-    button:disabled { opacity: 0.5; cursor: default; }
-    .btn-primary { background: #1e293b; color: #fff; }
-    .btn-approve { background: #16a34a; color: #fff; }
-    .btn-reject { background: #dc2626; color: #fff; }
-    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
-    .badge-approved { background: #dcfce7; color: #166534; }
-    .badge-needs_review { background: #fef3c7; color: #92400e; }
-    .badge-rejected { background: #fee2e2; color: #991b1b; }
+    .drop:hover .drop-icon, .drop.over .drop-icon { transform: translateY(-3px) scale(1.04); }
+    .drop-icon svg { width: 22px; height: 22px; }
+    #drop-text {
+      position: relative; z-index: 1; font-weight: 600; font-size: 14px; color: var(--ink);
+    }
+    .drop-hint { position: relative; z-index: 1; font-size: 12px; color: var(--ink-mute); margin-top: 4px; }
+
+    /* ---------- Buttons ---------- */
+    button {
+      font: inherit; padding: 9px 16px; border-radius: 10px; border: none;
+      cursor: pointer; font-weight: 600; font-size: 13px; letter-spacing: 0.01em;
+      position: relative; overflow: hidden;
+      transition: transform 0.12s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+    button:active { transform: translateY(1px) scale(0.985); }
+    button:disabled { opacity: 0.5; cursor: default; transform: none; }
+    button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff;
+      box-shadow: 0 8px 20px -8px var(--accent-glow);
+    }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.06); box-shadow: 0 12px 26px -8px var(--accent-glow); }
+    .btn-approve {
+      background: linear-gradient(135deg, #16a34a, #22c55e); color: #fff;
+      box-shadow: 0 6px 16px -8px rgba(22, 163, 74, 0.6);
+    }
+    .btn-approve:hover:not(:disabled) { filter: brightness(1.05); box-shadow: 0 10px 22px -8px rgba(22, 163, 74, 0.6); }
+    .btn-reject {
+      background: linear-gradient(135deg, #dc2626, #ef4444); color: #fff;
+      box-shadow: 0 6px 16px -8px rgba(220, 38, 38, 0.55);
+    }
+    .btn-reject:hover:not(:disabled) { filter: brightness(1.05); box-shadow: 0 10px 22px -8px rgba(220, 38, 38, 0.55); }
+
+    /* ---------- Badges / stamps ---------- */
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      border: 1px solid transparent;
+    }
+    .badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; }
+    .badge-approved { background: var(--pos-bg); color: var(--pos-ink); border-color: rgba(22, 163, 74, 0.25); }
+    .badge-approved::before { background: var(--pos); }
+    .badge-needs_review { background: var(--warn-bg); color: var(--warn-ink); border-color: rgba(217, 119, 6, 0.25); }
+    .badge-needs_review::before { background: var(--warn); }
+    .badge-rejected { background: var(--neg-bg); color: var(--neg-ink); border-color: rgba(220, 38, 38, 0.25); }
+    .badge-rejected::before { background: var(--neg); }
+
+    /* ---------- Tables ---------- */
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #f1f5f9; }
-    .num { font-variant-numeric: tabular-nums; text-align: right; }
-    .issue { background: #fef2f2; border-left: 3px solid #dc2626; padding: 8px 12px; margin: 6px 0; font-size: 13px; border-radius: 4px; }
-    .reasoning { background: #f8fafc; padding: 12px; border-radius: 6px; font-size: 13px; font-style: italic; color: #475569; margin-top: 12px; }
-    .meta { font-size: 13px; color: #64748b; }
-    .meta strong { color: #1c1c1c; }
-    .queue-item { border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin-bottom: 10px; }
-    .queue-item .actions { margin-top: 8px; display: flex; gap: 8px; }
-    .empty { color: #94a3b8; font-size: 13px; padding: 16px 0; text-align: center; }
-    .spinner { color: #64748b; font-size: 13px; }
-    .conf-bar { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 4px; }
-    .conf-fill { height: 100%; background: #16a34a; }
+    th {
+      text-align: left; padding: 8px 10px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-mute);
+      border-bottom: 1px solid var(--line);
+    }
+    td {
+      text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    tbody tr { transition: background 0.15s ease; }
+    tbody tr:hover { background: rgba(99, 102, 241, 0.045); }
+    .num { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; font-size: 12.5px; }
+
+    .totals { margin-top: 10px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--line); }
+    .totals td { padding: 8px 14px; border-bottom: 1px solid var(--line); }
+    .totals tr:last-child td { border-bottom: none; background: rgba(99, 102, 241, 0.06); }
+    .totals tr:last-child td strong { font-size: 14px; }
+
+    /* ---------- Issues / reasoning ---------- */
+    .issue {
+      background: var(--neg-bg);
+      border: 1px solid rgba(220, 38, 38, 0.2);
+      border-left: 3px solid var(--neg);
+      padding: 10px 14px; margin: 8px 0; font-size: 13px; border-radius: 10px;
+      animation: slideIn 0.4s ease both;
+    }
+    .issue strong { color: var(--neg-ink); }
+    .reasoning {
+      position: relative;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(139, 92, 246, 0.05));
+      border: 1px solid rgba(99, 102, 241, 0.18);
+      padding: 14px 16px 14px 16px; border-radius: var(--radius-sm);
+      font-size: 13px; color: var(--ink-soft); margin-top: 16px;
+    }
+    .reasoning::before {
+      content: "AI REASONING"; display: block;
+      font-size: 10px; font-weight: 800; letter-spacing: 0.12em; color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    /* ---------- Meta ---------- */
+    .meta { font-size: 13px; color: var(--ink-soft); display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .meta strong { color: var(--ink); font-weight: 700; }
+    .meta .sep { color: var(--ink-mute); }
+    .inv-no { font-family: var(--mono); font-size: 12.5px; color: var(--ink-soft); }
+
+    /* ---------- Confidence bar ---------- */
+    .conf-wrap { margin-top: 14px; }
+    .conf-label { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--ink-soft); margin-bottom: 6px; }
+    .conf-label b { font-family: var(--mono); font-size: 14px; color: var(--ink); font-weight: 600; }
+    .conf-bar { height: 8px; background: rgba(148, 163, 184, 0.22); border-radius: 999px; overflow: hidden; }
+    .conf-fill {
+      height: 100%; border-radius: 999px;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      width: 0; transition: width 1.1s cubic-bezier(0.2, 0.8, 0.2, 1);
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+    }
+
+    /* ---------- Queue ---------- */
+    .queue-item {
+      border: 1px solid var(--line); border-radius: var(--radius-sm);
+      padding: 14px 16px; margin-bottom: 12px; background: var(--surface-solid);
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+      animation: slideIn 0.45s ease both;
+    }
+    .queue-item:hover {
+      transform: translateY(-2px); box-shadow: var(--shadow-md);
+      border-color: var(--line-strong);
+    }
+    .queue-item .meta + .meta { margin-top: 6px; }
+    .queue-item .actions { margin-top: 12px; display: flex; gap: 8px; }
+    .queue-item .actions button { flex: 1; }
+
+    .empty {
+      color: var(--ink-mute); font-size: 13px; padding: 28px 0; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    .empty svg { width: 34px; height: 34px; opacity: 0.6; }
+
+    /* ---------- Spinner / loading ---------- */
+    .spinner {
+      color: var(--ink-soft); font-size: 13px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .spinner:not(:empty)::before {
+      content: ""; width: 16px; height: 16px; flex: none; border-radius: 50%;
+      border: 2px solid rgba(99, 102, 241, 0.25); border-top-color: var(--accent);
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* processing shimmer for the upload status */
+    #upload-status { margin-top: 14px; }
+
+    /* result fade/slide-in */
+    #result { animation: slideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .conf-fill { transition: none !important; }
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>LedgerLens</h1>
-    <p>Agentic invoice processing with confidence-gated human review</p>
+    <div class="brand">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
+          <line x1="11" y1="8" x2="11" y2="14"></line>
+          <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>
+      </span>
+      <div>
+        <h1>LedgerLens</h1>
+        <p>Agentic invoice processing with confidence-gated human review</p>
+      </div>
+    </div>
+    <div class="header-tools">
+      <span class="header-pill"><span class="live-dot"></span> Live</span>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle theme">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+        </svg>
+      </button>
+    </div>
   </header>
 
   <div class="wrap">
@@ -64,9 +445,17 @@
         <h2>Upload invoice</h2>
         <label class="drop" id="drop">
           <input type="file" id="file" accept="application/pdf" />
+          <span class="drop-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 16V4"></path>
+              <path d="m7 9 5-5 5 5"></path>
+              <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"></path>
+            </svg>
+          </span>
           <div id="drop-text">Drop a PDF here or click to choose</div>
+          <div class="drop-hint">PDF invoices · extraction runs automatically</div>
         </label>
-        <div id="upload-status" class="spinner" style="margin-top:12px;"></div>
+        <div id="upload-status" class="spinner"></div>
       </div>
 
       <div class="card" id="result-card" style="display:none;">
@@ -113,25 +502,31 @@
       document.getElementById("result").innerHTML = `
         <div class="meta">
           ${badge(inv.status)}
-          &nbsp; <strong>${inv.vendor_name ?? "(no vendor)"}</strong>
-          &nbsp; #${inv.invoice_number ?? "—"} &nbsp; ${inv.invoice_date ?? ""}
+          <strong>${inv.vendor_name ?? "(no vendor)"}</strong>
+          <span class="sep">·</span> <span class="inv-no">#${inv.invoice_number ?? "—"}</span>
+          <span class="sep">·</span> ${inv.invoice_date ?? ""}
         </div>
-        <div class="meta" style="margin-top:8px;">Confidence: ${confPct}%
-          <div class="conf-bar"><div class="conf-fill" style="width:${confPct}%"></div></div>
+        <div class="conf-wrap">
+          <div class="conf-label"><span>Confidence</span> <b>${confPct}%</b></div>
+          <div class="conf-bar"><div class="conf-fill"></div></div>
         </div>
-        <table style="margin-top:12px;">
+        <table style="margin-top:16px;">
           <thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Unit</th><th class="num">Amount</th></tr></thead>
           <tbody>${items}</tbody>
         </table>
-        <table style="margin-top:8px;">
+        <table class="totals" style="margin-top:14px;">
           <tr><td>Subtotal</td><td class="num">${money(ex.subtotal?.value, ex.currency?.value)}</td></tr>
           <tr><td>Tax</td><td class="num">${money(ex.tax?.value, ex.currency?.value)}</td></tr>
           <tr><td>Other charges ${ex.other_charges_note?.value ? "(" + ex.other_charges_note.value + ")" : ""}</td><td class="num">${money(ex.other_charges?.value, ex.currency?.value)}</td></tr>
           <tr><td><strong>Total</strong></td><td class="num"><strong>${money(ex.total?.value, ex.currency?.value)}</strong></td></tr>
         </table>
-        ${issues ? `<div style="margin-top:12px;">${issues}</div>` : ""}
+        ${issues ? `<div style="margin-top:14px;">${issues}</div>` : ""}
         <div class="reasoning">${inv.agent_reasoning ?? ""}</div>
       `;
+
+      // Animate the confidence bar fill on render.
+      const fill = document.querySelector("#result .conf-fill");
+      if (fill) requestAnimationFrame(() => { fill.style.width = confPct + "%"; });
     }
 
     async function uploadFile(file) {
@@ -161,16 +556,21 @@
         const res = await fetch(`${API}/invoices?status=needs_review`);
         const rows = await res.json();
         if (!rows.length) {
-          el.innerHTML = `<div class="empty">Nothing to review. All clear.</div>`;
+          el.innerHTML = `<div class="empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 6 9 17l-5-5"></path>
+            </svg>
+            Nothing to review. All clear.
+          </div>`;
           return;
         }
         el.innerHTML = rows.map(r => `
           <div class="queue-item">
             <div class="meta">
               ${badge(r.status)} <strong>${r.vendor_name ?? "(no vendor)"}</strong>
-              &nbsp; #${r.invoice_number ?? "—"}
+              <span class="sep">·</span> <span class="inv-no">#${r.invoice_number ?? "—"}</span>
             </div>
-            <div class="meta">Total: <strong>${money(r.total, r.currency)}</strong> · Confidence: ${Math.round((r.overall_confidence ?? 0) * 100)}%</div>
+            <div class="meta">Total: <strong>${money(r.total, r.currency)}</strong> <span class="sep">·</span> Confidence: ${Math.round((r.overall_confidence ?? 0) * 100)}%</div>
             <div class="actions">
               <button class="btn-approve" onclick="resolve(${r.id}, true)">Approve</button>
               <button class="btn-reject" onclick="resolve(${r.id}, false)">Reject</button>
@@ -185,6 +585,15 @@
       await fetch(`${API}/invoices/${id}/resolve?approve=${approve}`, { method: "POST" });
       loadQueue();
     }
+
+    // Theme toggle — state kept in a JS variable (no storage APIs in this environment)
+    let currentTheme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    function applyTheme(t) { document.documentElement.setAttribute("data-theme", t); }
+    applyTheme(currentTheme);
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+      currentTheme = currentTheme === "dark" ? "light" : "dark";
+      applyTheme(currentTheme);
+    });
 
     // Wire up upload (click + drag/drop)
     const drop = document.getElementById("drop");
