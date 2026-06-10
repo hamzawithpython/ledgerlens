@@ -53,7 +53,9 @@ def make_invoice(idx: int, seed: int, corrupt: str | None = None) -> dict:
         })
     subtotal = money(subtotal)
     tax = money(subtotal * TAX_RATE)
-    total = money(subtotal + tax)
+    # Some invoices carry a shipping/other charge to exercise reconciliation.
+    other = money(Decimal(str(random.choice([0, 0, 0, 12.50, 8.00])))) 
+    total = money(subtotal + tax + other)
 
     inv = {
         "file": f"invoice_{idx:02d}.pdf",
@@ -64,6 +66,7 @@ def make_invoice(idx: int, seed: int, corrupt: str | None = None) -> dict:
         "line_items": line_items,
         "subtotal": float(subtotal),
         "tax": float(tax),
+        "other_charges": float(other),
         "total": float(total),
         "expect_status": "approved",   # eval ground truth for routing
     }
@@ -121,6 +124,10 @@ def render_pdf(inv: dict, path: Path) -> None:
     c.drawRightString(5.5 * inch, y, "Tax (10%):")
     c.drawRightString(w - inch, y, f"{inv['currency']} {inv['tax']:.2f}")
     y -= 0.25 * inch
+    if inv.get("other_charges", 0):
+        y -= 0.25 * inch
+        c.drawRightString(5.5 * inch, y, "Shipping/Other:")
+        c.drawRightString(w - inch, y, f"{inv['currency']} {inv['other_charges']:.2f}")
     c.setFont("Helvetica-Bold", 11)
     c.drawRightString(5.5 * inch, y, "TOTAL:")
     c.drawRightString(w - inch, y, f"{inv['currency']} {inv['total']:.2f}")

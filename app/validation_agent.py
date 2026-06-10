@@ -75,15 +75,25 @@ def check_math(inv: ExtractedInvoice) -> list[ValidationIssue]:
                 message=f"Line items sum to {line_sum}, but subtotal is {subtotal}.",
             ))
 
-    # Subtotal + tax = total.
+    # Reconciliation: subtotal + tax + other_charges must equal total.
+    # If it doesn't, SOMETHING affecting the total wasn't captured (a fee, a
+    # discount, a field we don't model) — flag for human review rather than
+    # trying to guess what was missed.
     tax = _to_decimal(inv.tax.value) if inv.tax else Decimal("0")
+    other = _to_decimal(inv.other_charges.value) if inv.other_charges else Decimal("0")
+    if tax is None:
+        tax = Decimal("0")
+    if other is None:
+        other = Decimal("0")
     total = _to_decimal(inv.total.value)
-    if subtotal is not None and total is not None and tax is not None:
-        if abs((subtotal + tax) - total) > MONEY_TOL:
+    if subtotal is not None and total is not None:
+        expected = subtotal + tax + other
+        if abs(expected - total) > MONEY_TOL:
             issues.append(ValidationIssue(
-                rule="math_check", severity="error",
-                message=f"Subtotal {subtotal} + tax {tax} = {subtotal + tax}, "
-                        f"but total is {total}.",
+                rule="reconciliation", severity="error",
+                message=f"Totals do not reconcile: subtotal {subtotal} + tax {tax} "
+                        f"+ other_charges {other} = {expected}, but total is {total}. "
+                        f"An unaccounted charge may not have been extracted.",
             ))
     return issues
 
