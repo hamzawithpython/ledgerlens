@@ -29,4 +29,4 @@ _(Cloud Run link added at deploy)_
 - _Confidence thresholding:_ overall confidence = min of critical fields (vendor, invoice number, total); below 0.85 ? human review.
 
 ## What Didn'\''t Work / Lessons
-_(updated as we go)_
+- LLM self-reported confidence is poorly calibrated (Llama 4 Scout returns ~1.0 on nearly everything). Rule-based validation (math/duplicate/missing-field checks) is therefore the primary routing gate; model confidence is a secondary signal, with missing fields forced to 0.
