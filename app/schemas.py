@@ -50,3 +50,28 @@ class ProcessedInvoice(BaseModel):
     issues: list[ValidationIssue] = Field(default_factory=list)
     status: InvoiceStatus
     agent_reasoning: str
+
+
+# ---- API response models ----
+
+class InvoiceSummary(BaseModel):
+    """Compact row for list/queue views."""
+    id: int
+    vendor_name: str | None
+    invoice_number: str | None
+    invoice_date: str | None
+    total: float | None
+    currency: str | None
+    status: str
+    overall_confidence: float
+
+    model_config = {"from_attributes": True}
+
+
+class InvoiceDetail(InvoiceSummary):
+    """Full record for the review screen — includes extracted payload + issues."""
+    agent_reasoning: str | None
+    extracted_json: dict
+    issues_json: list
+
+    model_config = {"from_attributes": True}
