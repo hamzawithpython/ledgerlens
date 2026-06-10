@@ -18,6 +18,15 @@ _(diagram added in a later phase)_
 - **Infra:** Docker, Cloud Run
 - **Evals:** custom field-accuracy + clean-pass-rate script
 
+## Results
+
+Measured by `evals/run_eval.py` on 8 synthetic invoices with known-correct ground truth (generator produces both the PDFs and the truth values, so accuracy is exact):
+
+- **Field-level extraction accuracy: 97.2%** (70/72 scalar fields across vendor, invoice number, date, currency, subtotal, tax, other charges, total, and line-item count).
+- **Routing accuracy: 100%** (8/8 invoices routed to the correct status — clean invoices auto-approved, the two with deliberately missing fields flagged to human review).
+
+The two "missed" fields are blank fields on deliberately-corrupted invoices, which the model correctly reported as absent (the reason those invoices route to review). All metrics are on synthetic test data, not a real-world benchmark.
+
 ## Setup
 _(filled in once runnable)_
 
@@ -37,3 +46,6 @@ _(Cloud Run link added at deploy)_
 - The model launders numeric errors, so tests target what it can't fix: Scout silently corrected both wrong totals and wrong line-item amounts back to internal consistency on extraction, masking the very discrepancies AP review exists to catch. The deterministic math rule is therefore unit-tested against synthetic data, while end-to-end review routing is exercised via missing-field corruptions (blank vendor / invoice number), which vision models report faithfully rather than repair.
 - Don't model every field — reconcile the math: real invoices carry charges we can't anticipate (shipping, handling, discounts, deposits). Rather than enumerate them, LedgerLens captures all non-tax adjustments into a single other_charges bucket and enforces subtotal + tax + other_charges = total. When the arithmetic doesn't close, an unaccounted charge wasn't extracted, and the invoice routes to human review — so silent extraction gaps surface as reconciliation failures instead of bad data. The human-in-the-loop is the safety net for what extraction misses.
 - Cache extraction by file-content hash: vision API calls cost quota and latency, and the same invoice shouldn't be re-extracted on every eval run or re-upload. Hashing file bytes (rename-safe) means each unique invoice costs exactly one model call, ever — making the project runnable entirely within a free tier.
+- On 8 synthetic invoices: field-level accuracy X%, routing accuracy Y%. Notably, the vision model occasionally misreads a line value (e.g. a shipping charge) and then self-reconciles the total to its own erroneous figure — passing the arithmetic check despite being wrong. This is a documented limitation: reconciliation catches missing charges (where totals won't close) but not misread ones (where the model makes them close). A production system would mitigate this with cross-field validation against the rendered line text or a second-model check.
+- Test your test data: low extraction scores initially looked like a model limitation, but inspecting the actual PDF revealed a y-coordinate collision in the synthetic-invoice generator — the shipping and total lines were rendered on top of each other, and the model "misread" the resulting smear. The fix was in the generator's layout, not the model. When eval numbers look bad, verify the input before blaming the model.
+- Reconciliation catches missing charges, not misread ones: the arithmetic check (`subtotal + tax + other_charges = total`) flags charges that aren't extracted, but a model that misreads a value and self-reconciles the total to its own figure would pass it. A sanity rule flags charges exceeding the subtotal (rare on real invoices) as a warning routed to review, closing part of that gap.

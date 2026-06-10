@@ -87,3 +87,11 @@ def test_unaccounted_gap_flagged():
     inv.total = _fc(75.0)   # 50 + 5 + 0 = 55, but total says 75 -> 20 unaccounted
     issues = check_math(inv)
     assert any(i.rule == "reconciliation" for i in issues)
+
+def test_implausible_charge_flagged():
+    """other_charges exceeding subtotal is flagged as a warning (possible misread)."""
+    from app.validation_agent import check_charge_sanity
+    inv = _good_invoice()           # subtotal 50
+    inv.other_charges = _fc(772.94) # absurd shipping
+    issues = check_charge_sanity(inv)
+    assert any(i.rule == "charge_sanity" for i in issues)

@@ -123,11 +123,11 @@ def render_pdf(inv: dict, path: Path) -> None:
     y -= 0.25 * inch
     c.drawRightString(5.5 * inch, y, "Tax (10%):")
     c.drawRightString(w - inch, y, f"{inv['currency']} {inv['tax']:.2f}")
-    y -= 0.25 * inch
     if inv.get("other_charges", 0):
         y -= 0.25 * inch
         c.drawRightString(5.5 * inch, y, "Shipping/Other:")
         c.drawRightString(w - inch, y, f"{inv['currency']} {inv['other_charges']:.2f}")
+    y -= 0.25 * inch
     c.setFont("Helvetica-Bold", 11)
     c.drawRightString(5.5 * inch, y, "TOTAL:")
     c.drawRightString(w - inch, y, f"{inv['currency']} {inv['total']:.2f}")
