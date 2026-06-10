@@ -8,3 +8,4 @@ __pycache__/
 evals/samples/*.pdf
 chroma_db/
 .pytest_cache/
+evals/cache/
