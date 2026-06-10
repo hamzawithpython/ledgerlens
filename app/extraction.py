@@ -39,6 +39,40 @@ def _strip_fences(text: str) -> str:
     text = re.sub(r"\s*```$", "", text)
     return text.strip()
 
+def _wrap_field(v):
+    """Coerce a raw value into the {value, confidence} shape if it isn't already."""
+    if isinstance(v, dict) and "value" in v:
+        return v  # already {value, confidence}
+    return {"value": v, "confidence": 1.0}
+
+
+def _normalize_line_items(data: dict) -> dict:
+    """Scout returns line-item fields either flat or nested; normalize to nested.
+
+    Some responses give {"description": "X", "quantity": 5, ...} (flat) and others
+    give {"description": {"value": "X", "confidence": 1.0}, ...} (nested). We
+    coerce every line-item field to the nested {value, confidence} shape so the
+    ExtractedInvoice schema validates regardless of which the model emitted.
+    """
+    items = data.get("line_items")
+    if not isinstance(items, list):
+        return data
+    normalized = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        # Pull a per-line confidence if the model put one at the item level (flat shape).
+        line_conf = item.get("confidence", 1.0)
+        fixed = {}
+        for key in ("description", "quantity", "unit_price", "amount"):
+            raw = item.get(key)
+            if isinstance(raw, dict) and "value" in raw:
+                fixed[key] = raw
+            else:
+                fixed[key] = {"value": raw, "confidence": line_conf}
+        normalized.append(fixed)
+    data["line_items"] = normalized
+    return data
 
 def extract_invoice(pdf_path: str | Path, use_cache: bool = True) -> ExtractedInvoice:
     """Extract a single-page invoice PDF into validated Pydantic. Caches by file hash."""
@@ -73,6 +107,7 @@ def extract_invoice(pdf_path: str | Path, use_cache: bool = True) -> ExtractedIn
 
     raw = _strip_fences(response.choices[0].message.content)
     data = json.loads(raw)
+    data = _normalize_line_items(data)
     invoice = ExtractedInvoice.model_validate(data)
 
     # Cache the validated result so we never re-spend quota on identical input.
